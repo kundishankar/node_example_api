@@ -5,10 +5,16 @@ const path = require('path');
 class User {
     getAllUsers = async (req, res) => {
         try{
+            var limit;
+            var page;
+            //console.log(req.params)
+            req.params.limit===undefined ? limit=10: limit=req.params.limit;
+            req.params.page===undefined ? page=0: page=(req.params.page-1)*req.params.limit;
+            
             UserModel.find({}, (err, data) => {
-                console.log(data);
-                res.send(data);
-            })
+                //console.log(data);
+                res.status(201).send({users:data,skip:page,limit:limit});
+            }).skip(page).limit(limit);
         }catch(e){
             console.error(e)
         }  

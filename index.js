@@ -11,6 +11,13 @@ const fs = require('fs');
 //const { post } = require('./app/router/index');
 const db = require('./app/config/db');
 var multer = require('multer');
+var events = require('events');
+const socket = require("socket.io");
+const ChatModel = require('./app/models/Chats');
+//var socket = require('socket.io');
+//const { Server } = require('http');
+
+
 //var upload = multer({dest:"./uploads/"});
 
 // SET STORAGE
@@ -60,6 +67,10 @@ app.get('/home', (req, res) => {
     res.render('home')
 })
 
+app.use('/chat', (req, res) => {
+    res.render('chat')
+});
+
 app.get('/', (req, res) => {
     res.render('index', {firstName:"shankar", lastName:"Kundi"})
 })
@@ -105,4 +116,76 @@ app.use('/api', indexRouter)
 //     res.send({img: req.file, fields: req.body})
 //  });
 
-app.listen(port, () => console.log(`Server started at port : ${port}`));
+//IIFE (Immedietely Invoke function expressions)
+// (function () {
+//     console.log("Hello")
+//   })()
+// var eventEmitter = new events.EventEmitter();
+
+// eventEmitter.on('hello', function(){
+//     console.log("Hello world events")
+// });
+
+//eventEmitter.emit('hello')
+
+var server = app.listen(port, () => console.log(`Server started at port : ${port}`));
+
+// Socket setup
+const io = socket(server);
+
+io.on("connection", function(socket){
+    var userName;
+    socket.on('joining_chat',(data)=>{
+        // console.log(data.username)
+        userName = data.username;
+        console.log("User " + userName + " : " + socket.id);
+         io.emit('joining_chat',{username: data.username})
+         
+         socket.on("disconnect", () => {
+            //console.log("User " + userName + " disconneted : " + socket.id); // undefined
+            io.emit('left_chat',{username: data.username})
+          });
+         
+     })
+
+     
+    //socket.emit('firstchat', {message:"Hello welcome to chat!!"})
+    socket.on('chatMessage', (data)=> {
+        //console.log(userName)
+        // if(userName == data.userName){
+        //     io.emit('chatMessage',{message: data.message, userName: "You"})
+        // }else{
+        //     io.emit('chatMessage',{message: data.message, userName: data.userName})
+        // }
+        var userData = new ChatModel({message: data.message, username: data.userName})
+        userData.save((err, result) => {
+            if(err) throw err;
+            console.log("Data inserted successfully - " + result.id)
+        });
+        io.emit('chatMessage',{message: data.message, userName: data.userName})
+        
+    })
+
+    // socket.on('exitChat', (data)=> {
+    //     console.log(data.userName)
+    //     // io.emit('chatMessage',{message: data.message, userName: data.userName})
+    //     socket.on("disconnect", () => {
+    //         //console.log("User " + userName + " disconneted : " + socket.id); // undefined
+    //         io.emit('left_chat',{username: data.userName})
+    //       });
+    // })
+
+async function getPosts(){
+   return fetch(url)
+}
+
+//console.log(getPosts().then((data)=> data.json()).then(data1 => console.log(data1.products)));
+    
+});
+
+
+
+
+
+
+

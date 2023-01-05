@@ -1,6 +1,9 @@
 <ul>
-    <% articles.map((article)=> { %>
+    <% articles.map((article,i)=> { %>
         <li>
+            <p>
+                <%= i+1%>
+            </p>
             <h2>
                 <%= article.title %>
             </h2>

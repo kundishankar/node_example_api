@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+   <head><title>Hello world</title></head>
+   <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+   <script src="/socket.io/socket.io.js"></script>
+   <style>
+      body {
+        margin: 0 auto;
+        max-width: 800px;
+        padding: 0 20px;
+      }
+      
+      .container {
+        border: 2px solid #dedede;
+        background-color: #f1f1f1;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px 0;
+      }
+      
+      .darker {
+        border-color: #ccc;
+        background-color: #ddd;
+      }
+      
+      .container::after {
+        content: "";
+        clear: both;
+        display: table;
+      }
+      
+      .container img {
+        float: left;
+        max-width: 60px;
+        width: 100%;
+        margin-right: 20px;
+        border-radius: 50%;
+      }
+      
+      .container img.right {
+        float: right;
+        margin-left: 20px;
+        margin-right:0;
+      }
+      
+      .time-right {
+        float: right;
+        color: #aaa;
+      }
+      
+      .time-left {
+        float: left;
+        color: #999;
+      }
+      </style>
+   <script>
+      var socket = io();
+      var userName;
+      function myFunction(){
+        
+        userName = document.getElementById('username').value;
+        document.getElementById('username').value = '';
+        $("#demo1").text("Welcome " + userName)
+        //console.log(userName);
+         socket.emit('joining_chat',{
+            username:userName
+         })
+      }
+
+      function myMessage(){
+        
+        message = document.getElementById('chat_message').value;
+        document.getElementById('chat_message').value = '';
+         console.log(userName + " : "+ message);
+         socket.emit('chatMessage',{
+            message:message,
+            userName:userName
+         })
+      }
+
+      function exitChatRoom(){
+        //alert(userName);
+      //   message = document.getElementById('chat_message').value;
+      //   document.getElementById('chat_message').value = '';
+      //    console.log(userName + " : "+ message);
+         socket.emit('exitChat',{
+            userName:userName
+         })
+      }
+      var newDate = new Date();
+      socket.on('chatMessage', (data) => {
+        console.log(data.userName +":"+ userName)
+        if(userName === data.userName){
+         $("#demo_message").append("<div align='right' class='container darker' style='background-color:lightblue;'><p><span style='font-size:12px;'>"+newDate.toLocaleString()+"</span><br>"+data.message+"</p></div>")
+        }else{
+         $("#demo_message").append("<div class='container'><p><b>"+data.userName+"</b> <span style='font-size:12px;'>"+newDate.toLocaleString()+"</span> :<br> "+data.message+"</p></div>")
+        }
+        
+      })
+
+   //    socket.emit('firstchat',{
+   //      message:"Hello chat, How are you?"
+   //   })
+
+     socket.on('joining_chat', (data) => {
+        console.log(data.username)
+        //document.getElementById("demo").innerHTML = data.username;
+        $("#demo").append("<li style='color:green;'>---- "+data.username+" joined the chat at "+newDate.toLocaleString()+" ----</li>")
+      })
+
+      socket.on('left_chat', (data) => {
+        console.log(data.username)
+        //document.getElementById("demo").innerHTML = data.username;
+        $("#demo").append("<li style='color:red;'>---- "+data.username+" left the chat at "+newDate.toLocaleString()+" ----</li>")
+      })
+     
+   </script>
+   <body>
+    Join the Chat Room: <input type="text" id="username" placeholder="Enter Name"/><button type="submit" onclick="myFunction()">Add</button>
+    <button onclick="exitChatRoom()">Exit Chat Room</button>
+      <h1 id="demo1"></h1>
+    <div id="demo"></div>
+
+    <div>
+      <table style="border: 2px solid lightgrey;width: 100%;height: 500px;">
+         <tr>
+            <td>
+               <div id="demo_message"></div>
+            </td>
+         </tr>
+       <!-- <div class="container darker">
+         <img src="/w3images/avatar_g2.jpg" alt="Avatar" class="right" style="width:100%;">
+         <p>Hey! I'm fine. Thanks for asking!</p>
+         <span class="time-left">11:01</span>
+       </div> -->
+      <tr>
+         <td>
+            <input type="text" id="chat_message" placeholder="Enter Message"/><button type="submit" onclick="myMessage()">Send</button>
+         </td>
+      </tr>
+   </table>
+    </div>
+   </body>
+</html>
